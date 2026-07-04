@@ -105,7 +105,7 @@ The pipeline is split into three main security channels. All telemetry is aggreg
 ## 📖 Detailed PDF Documentation
 A comprehensive technical design document detailing network topologies, security threat models, and design trade-offs can be found in the root directory:
 * 👉 **[Download the Project PDF](./Secure_Kubernetes_Telemetry_Pipeline.pdf)**
-*(Simply drop your compiled PDF file named `Secure_Kubernetes_Telemetry_Pipeline.pdf` in the root folder before committing).*
+*(Rename your project PDF to `Secure_Kubernetes_Telemetry_Pipeline.pdf` and place it in the root of this folder before committing).*
 
 ---
 
