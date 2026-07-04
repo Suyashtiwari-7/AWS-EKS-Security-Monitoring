@@ -1,0 +1,51 @@
+# Helm value overrides for Falco & Sidekick
+driver:
+  kind: ebpf
+
+falco:
+  json_output: true
+  json_include_output_property: true
+  log_stderr: true
+  log_syslog: false
+  log_level: info
+  stdout_output:
+    enabled: true
+  # Modern way: send alerts to Falcosidekick via HTTP (Falco 0.43+)
+  http_output:
+    enabled: true
+    url: "http://falco-falcosidekick.falco.svc.cluster.local:2801"
+  outputs_queue:
+    capacity: 1000
+  file_output:
+    enabled: true
+    keep_alive: false
+    filename: /var/log/falco_events.json
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      cpu: 200m
+      memory: 512Mi
+
+# Enable Falcosidekick - this sends Falco alerts to Wazuh via Syslog
+falcosidekick:
+  enabled: true
+  config:
+    debug: true
+    syslog:
+      host: falco-receiver-svc.wazuh.svc.cluster.local
+      port: 5140
+      protocol: udp
+      format: json
+      minimumpriority: notice
+    customfields:
+      source: "falco-eks"
+      cluster: "production-eks"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi

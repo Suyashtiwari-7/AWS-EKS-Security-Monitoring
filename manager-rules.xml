@@ -1,0 +1,40 @@
+<group name="local,">
+  <!-- Rule 100050: Trivy CVE alert with full workload context (Level 10) -->
+  <rule id="100050" level="10">
+    <decoded_as>json</decoded_as>
+    <field name="CVE">\.+</field>
+    <description>Trivy Scan: $(Severity) Vulnerability - $(CVE) in $(namespace)/$(name) (container: $(container))</description>
+  </rule>
+
+  <!-- Rule 100051: Falco runtime threat alert (Level 12 — Critical) -->
+  <rule id="100051" level="12">
+    <decoded_as>json</decoded_as>
+    <field name="output">\.+</field>
+    <field name="priority">\.+</field>
+    <field name="rule">\.+</field>
+    <description>Falco Alert: $(rule)</description>
+  </rule>
+
+  <!-- Rule 100060: Base K8s Event (CloudWatch Alternative - Event Exporter logs) -->
+  <rule id="100060" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="reason">\.+</field>
+    <description>Kubernetes Event: [$(involvedObject.kind)] [$(reason)] - $(message)</description>
+  </rule>
+
+  <!-- Rule 100061: K8s Warning Event — inherits 100060 (Level 8) -->
+  <rule id="100061" level="8">
+    <if_sid>100060</if_sid>
+    <field name="type">^Warning$</field>
+    <description>Kubernetes Warning Event: [$(involvedObject.kind)] $(reason) - $(message)</description>
+    <group>k8s_warning,</group>
+  </rule>
+
+  <!-- Rule 100062: K8s Config Change Event (Level 5 — Notice) -->
+  <rule id="100062" level="5">
+    <if_sid>100060</if_sid>
+    <field name="involvedObject.kind">^Deployment$|^ConfigMap$|^Secret$|^ReplicaSet$</field>
+    <description>Kubernetes Config/Deployment Event: $(involvedObject.name) $(reason)</description>
+    <group>k8s_config,</group>
+  </rule>
+</group>

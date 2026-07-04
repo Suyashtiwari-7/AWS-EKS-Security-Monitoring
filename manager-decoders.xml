@@ -1,0 +1,11 @@
+<!-- Decoder: Trivy CVE reports — prematch on leading {"CVE" key -->
+<decoder name="trivy">
+  <prematch>^{"CVE"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<!-- Decoder: Falco runtime alerts — prematch on 'falco' keyword or 'uuid' -->
+<decoder name="falco">
+  <prematch>falco|uuid</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>

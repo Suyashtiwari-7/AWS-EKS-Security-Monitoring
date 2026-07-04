@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: protected-nginx
+  namespace: wazuh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: protected-nginx
+  template:
+    metadata:
+      labels:
+        app: protected-nginx
+    spec:
+      serviceAccountName: tailscale
+      volumes:
+      - name: shared-logs
+        emptyDir: {}
+      - name: wazuh-config
+        configMap:
+          name: wazuh-agent-config
+      - name: tun
+        hostPath:
+          path: /dev/net/tun
+      containers:
+      # --- Container 1: The Nginx App ---
+      - name: nginx
+        image: nginx:latest
+        volumeMounts:
+        - name: shared-logs
+          mountPath: /var/log/nginx
+      
+      # --- Container 2: Wazuh Agent Sidecar ---
+      - name: wazuh-agent
+        image: wazuh/wazuh-agent:4.14.5
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "nohup python3 -u /var/ossec/falco_listener.py >/dev/null 2>&1 &"]
+        env:
+        - name: WAZUH_MANAGER
+          value: "<WAZUH_MANAGER_IP>"
+        - name: WAZUH_REGISTRATION_SERVER
+          value: "<WAZUH_MANAGER_IP>"
+        - name: WAZUH_AGENT_NAME
+          value: "nginx-eks-pod"
+        volumeMounts:
+        - name: shared-logs
+          mountPath: /logs/nginx
+        - name: shared-logs
+          mountPath: /logs/trivy
+        - name: wazuh-config
+          mountPath: /var/ossec/etc/ossec.conf
+          subPath: ossec.conf
+        - name: wazuh-config
+          mountPath: /var/ossec/falco_listener.py
+          subPath: falco_listener.py
+      
+      # --- Container 3: Trivy-Bridge Helper ---
+      # This grabs vulnerability reports and turns them into logs for Wazuh
+      - name: trivy-bridge
+        image: bitnami/kubectl:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            while true; do
+              kubectl get vulnerabilityreports -A -o go-template='{{range .items}}{{$ns := .metadata.namespace}}{{$kind := index .metadata.labels "trivy-operator.resource.kind"}}{{$name := index .metadata.labels "trivy-operator.resource.name"}}{{$container := index .metadata.labels "trivy-operator.container.name"}}{{range .report.vulnerabilities}}{"namespace": "{{$ns}}", "kind": "{{$kind}}", "name": "{{$name}}", "container": "{{$container}}", "CVE": "{{.vulnerabilityID}}", "Severity": "{{.severity}}", "Title": "{{.title}}"}{{"\n"}}{{end}}{{end}}' > /logs/trivy/reports.json 2>/dev/null
+              sleep 300
+            done
+        volumeMounts:
+        - name: shared-logs
+          mountPath: /logs/trivy
+
+      # --- Container 4: Tailscale Tunnel ---
+      - name: tailscale
+        image: tailscale/tailscale:v1.64.2
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN"]
+          privileged: true
+        env:
+        - name: TS_AUTHKEY
+          valueFrom:
+            secretKeyRef:
+              name: tailscale-auth
+              key: TS_AUTHKEY
+        - name: TS_KUBE_SECRET
+          value: "tailscale-auth"
+        - name: TS_USERSPACE
+          value: "false"
+        - name: TS_ACCEPT_DNS
+          value: "false"
+        volumeMounts:
+        - name: tun
+          mountPath: /dev/net/tun
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: falco-receiver-svc
+  namespace: wazuh
+spec:
+  selector:
+    app: protected-nginx
+  ports:
+  - name: falco
+    protocol: UDP
+    port: 5140
+    targetPort: 5140
+  - name: k8s-events
+    protocol: TCP
+    port: 5141
+    targetPort: 5141

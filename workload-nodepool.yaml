@@ -1,0 +1,35 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: general-workloads
+spec:
+  template:
+    spec:
+      # This NodePool will ONLY run on nodes it provisions itself.
+      # It does NOT have the CriticalAddonsOnly taint, so our pods can land here.
+      nodeClassRef:
+        group: eks.amazonaws.com
+        kind: NodeClass
+        name: default
+      requirements:
+        # Allow both on-demand and spot instances for cost savings
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["on-demand", "spot"]
+        # Use t3.small for better performance and enough RAM for Security tools
+        - key: node.kubernetes.io/instance-type
+          operator: In
+          values: ["t3.small"]
+        # Stay in the same region as our cluster
+        - key: topology.kubernetes.io/region
+          operator: In
+          values: ["ap-south-1"]
+  # Safety limits to control costs
+  limits:
+    cpu: "4"
+    memory: 8Gi
+  # Karpenter will automatically remove idle nodes after 30 seconds
+  # to save money when the cluster is not in use
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 30s
