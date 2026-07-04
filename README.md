@@ -83,7 +83,7 @@ The pipeline is split into three main security channels. All telemetry is aggreg
 ```
 .
 ├── README.md                           # Documentation and setup instructions
-├── Secure_Kubernetes_Telemetry_Pipeline.pdf # Project Technical Design Guide (Add your PDF here)
+├── Secure_Kubernetes_Telemetry_Pipeline.pdf # Project Technical Design Guide (PDF)
 │
 ├── [ EKS Deployment Manifests ]
 ├── wazuh-sidecar.yaml                  # Application pod with 4 containers (Sidecar Architecture)
@@ -99,13 +99,6 @@ The pipeline is split into three main security channels. All telemetry is aggreg
     ├── manager-decoders.xml            # Custom regex patterns for Trivy & Falco JSON logs
     └── manager-rules.xml               # Custom rules for threat mapping & MITRE compliance
 ```
-
----
-
-## 📖 Detailed PDF Documentation
-A comprehensive technical design document detailing network topologies, security threat models, and design trade-offs can be found in the root directory:
-* 👉 **[Download the Project PDF](./Secure_Kubernetes_Telemetry_Pipeline.pdf)**
-*(Rename your project PDF to `Secure_Kubernetes_Telemetry_Pipeline.pdf` and place it in the root of this folder before committing).*
 
 ---
 
