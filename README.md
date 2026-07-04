@@ -90,14 +90,6 @@ By leveraging **Kubernetes Event Exporter**, this architecture bypasses expensiv
 
 ---
 
-## ── DETAILED PDF DOCUMENTATION ──
-
-A full, comprehensive PDF technical design and deployment guide of this architecture is available here:
-* **[Download PDF Guide](./Secure_Kubernetes_Telemetry_Pipeline.pdf)**
-*(Rename your project PDF to `Secure_Kubernetes_Telemetry_Pipeline.pdf` and place it in the root of this folder before pushing to GitHub).*
-
----
-
 ## ── DEPLOYMENT INSTRUCTIONS ──
 
 ### 1. Configure the Wazuh Manager (Ubuntu VM)
